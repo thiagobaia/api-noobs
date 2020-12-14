@@ -13,22 +13,7 @@ router.get("/", (req, res, next) => {
       if (error) {
         return res.status(500).send({ error: error });
       }
-
-      const response = {
-        quantities: result.length,
-        qrcode: result.map((qrcode) => {
-          return {
-            id_qrcode: qrcode.id_qrcode,
-            content_qrcode: qrcode.content_qrcode,
-            request: {
-              type: "GET",
-              description: "Returns all qrcode",
-              url: "localhost:3000/dashboard/" + qrcode.id_qrcode,
-            },
-          };
-        }),
-      };
-      return res.status(200).send(response);
+      return res.status(200).send(result);
     });
   });
 });
@@ -52,15 +37,7 @@ router.get("/:id_qrcode", (req, res, next) => {
           });
         }
 
-        const response = {
-          qrcode: {
-            id_qrcode: result[0].id_qrcode,
-            title_qrcode: result[0].title_qrcode,
-            content_qrcode: result[0].content_qrcode,
-          },
-        };
-
-        return res.status(200).send(response);
+        return res.status(200).send(result);
       }
     );
   });
