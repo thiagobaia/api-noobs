@@ -53,9 +53,11 @@ router.get("/:id_qrcode", (req, res, next) => {
         }
 
         const response = {
+          qrcode: {
             id_qrcode: result[0].id_qrcode,
             title_qrcode: result[0].title_qrcode,
             content_qrcode: result[0].content_qrcode,
+          },
         };
 
         return res.status(200).send(response);
