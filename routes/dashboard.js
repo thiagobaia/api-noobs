@@ -53,17 +53,9 @@ router.get("/:id_qrcode", (req, res, next) => {
         }
 
         const response = {
-          message: "single qrcode search",
-          qrcode: {
             id_qrcode: result[0].id_qrcode,
             title_qrcode: result[0].title_qrcode,
             content_qrcode: result[0].content_qrcode,
-            request: {
-              type: "GET",
-              description: "Returns all qrcode",
-              url: "localhost:3000/dashboard",
-            },
-          },
         };
 
         return res.status(200).send(response);
@@ -91,11 +83,6 @@ router.post("/", login, (req, res, next) => {
             id_qrcode: result.id_qrcode,
             title_qrcode: req.body.title_qrcode,
             content_qrcode: req.body.content_qrcode,
-            request: {
-              type: "POST",
-              description: "create qrcode",
-              url: "localhost:3000/dashboard",
-            },
           },
         };
         return res.status(201).send(response);
