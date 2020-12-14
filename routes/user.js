@@ -1,105 +1,79 @@
 const express = require("express");
-const { routes } = require("../app");
 const router = express.Router();
 const mysql = require("../mysql").pool;
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken')
 
-//RETORNA TODOS USUARIOS 
-router.get('/', (req, res, next) => {
-  mysql.getConnection((error, conn) => {
-    if(error){ return res.status(500).send({ error: error })}
-    conn.query(
-      'SELECT * FROM user;',
-      (error, resultado, fields) => {
-        if(error){ return res.status(500).send({ error: error })}
-        return res.status(200).send({ response: resultado })
-      }
-    )
-  })
-});
-
-// RETORNA DADOS DE UM USUARIO ESPECIFICO PELO ID 
-router.get('/:id_user', (req, res, next) => {
-  mysql.getConnection((error, conn) => {
-    if(error){ return res.status(500).send({ error: error })}
-    conn.query(
-      'SELECT * FROM user WHERE id_user = ?;',
-      [req.params.id_user],
-      (error, resultado, fields) => {
-        if(error){ return res.status(500).send({ error: error })}
-        return res.status(200).send({ response: resultado })
-      }
-    )
-  })
-});
 
 // CRIA UM NOVO USUARIO
-router.post("/", (req, res, next) => {
+router.post("/register", (req, res, next) => {
   mysql.getConnection((error, conn) => {
     if(error){ return res.status(500).send({ error: error })}
-    conn.query(
-      "INSERT INTO noobs_db.user (name, age, email, password) VALUES(?,?,?,?)",
-      [req.body.name, req.body.age, req.body.email, req.body.password],
-      (error, resultado, field) => {
-        conn.release();
-        if(error){ return res.status(500).send({ error: error })}
+    conn.query('SELECT * FROM user WHERE email = ?', [req.body.email], (error, results) => {
+      if(error) { return res.status(500).send({ error: error }) }
+      if(results.length > 0){
+        res.status(409).send({ mensagem: 'Usuario já cadastrado'})
+      } else {
 
-        res.status(201).send({
-          mensagem: "Usuario criado com sucesso",
-          id_user: resultado.insertId,
-        });
+        bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
+          if(errBcrypt){return res.status(500).send({ error: errBcrypt})}
+          conn.query(
+            `INSERT INTO noobs_db.user (name, age, email, password) VALUES (?,?,?,?)`,
+            [req.body.name, req.body.age, req.body.email, hash],
+            (error, result) => {
+              conn.release();
+              if(error){ return res.status(500).send({ error: error })}
+              response = {
+                mensagem: "Usuario criado com sucesso",
+                userCreated: {
+                  id_user: result.insertId,
+                  name: req.body.name,
+                  age: req.body.age,
+                  email:req.body.email 
+                }, 
+              }
+               return res.status(201).send(response);
+            }
+          );
+        })
+        
       }
-    );
+    })
   });
 });
 
 
-// EDITAR INFORMAÇÕES DO USUARIO 
-router.patch('/', (req, res, next) => {
+router.post('/login', (req, res, next) => {
   mysql.getConnection((error, conn) => {
-    if(error){ return res.status(500).send({ error: error })}
-    conn.query(
-      `UPDATE user
-          SET name = ?,
-           age = ?, 
-           email = ?, 
-           password = ? 
-           WHERE id_user = ? `,
-          [
-            req.body.name, 
-            req.body.age, 
-            req.body.email, 
-            req.body.password,
-            req.body.id_user
-          ],
-      (error, resultado, fields) => {
-        conn.release();
-        if(error){ return res.status(500).send({ error: error })}
-    
-        res.status(202).send({
-          mensagem: "Usuario Editado com Sucesso!",
-        })
+    if (error) { return res.status(500).send({ error: error})}
+    const query = `SELECT * FROM user WHERE email = ?`;
+    conn.query(query, [req.body.email], (error, results, fields) => {
+      conn.release();
+      if (error) { return res.status(500).send({ error: error}) }
+      if (results.length < 1) {
+        return res.status(401).send({ mensagem: 'Falha na autenticação'})
       }
-    )
+      bcrypt.compare(req.body.password, results[0].password, (err, result) => {
+        if(err) {
+          return res.status(401).send({ mensagem: 'Falha na autenticação'})
+        }
+        if( result) {
+          const token = jwt.sign({
+            id_user: results[0].id_user,
+            email: results[0].email
+          }, process.env.JWT_KEY,
+          {
+            expiresIn: "1h"
+          });
+          return res.status(200).send({ mensagem: 'Autenticado com sucesso',
+          token: token
+        });
+        }
+        return res.status(401).send({ mensagem: 'Falha na autenticação'})
+      })
+    })
   })
-});
-
-
-//DELETAR CONTA DE USUARIO 
-router.delete('/', (req, res, next) => {
-  mysql.getConnection((error, conn) => {
-    if(error){ return res.status(500).send({ error: error })}
-    conn.query(
-      `DELETE FROM user WHERE id_user = ?`,[req.body.id_user],
-      (error, resultado, fields) => {
-        if(error){ return res.status(500).send({ error: error })}
-        
-        res.status(202).send({
-          mensagem: "Usuario deletado",
-        })
-      }
-    )
-  })
-});
+})
 
 
 module.exports = router;
