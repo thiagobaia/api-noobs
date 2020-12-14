@@ -18,7 +18,7 @@ router.post("/register", (req, res, next) => {
         bcrypt.hash(req.body.password, 10, (errBcrypt, hash) => {
           if(errBcrypt){return res.status(500).send({ error: errBcrypt})}
           conn.query(
-            `INSERT INTO noobs_db.user (name, age, email, password) VALUES (?,?,?,?)`,
+            `INSERT INTO user (name, age, email, password) VALUES (?,?,?,?)`,
             [req.body.name, req.body.age, req.body.email, hash],
             (error, result) => {
               conn.release();

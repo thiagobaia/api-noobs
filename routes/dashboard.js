@@ -78,7 +78,7 @@ router.post("/", login, (req, res, next) => {
       return res.status(500).send({ error: error });
     }
     conn.query(
-      "INSERT INTO noobs_db.qrcode (title_qrcode, content_qrcode) VALUES(?,?)",
+      "INSERT INTO qrcode (title_qrcode, content_qrcode) VALUES(?,?)",
       [req.body.title_qrcode, req.body.content_qrcode],
       (error, result, field) => {
         conn.release();
