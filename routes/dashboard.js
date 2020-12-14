@@ -56,15 +56,7 @@ router.post("/", login, (req, res, next) => {
         if (error) {
           return res.status(500).send({ error: error });
         }
-        const response = {
-          message: "qrcode successfully created",
-          qrcodeCreated: {
-            id_qrcode: result.id_qrcode,
-            title_qrcode: req.body.title_qrcode,
-            content_qrcode: req.body.content_qrcode,
-          },
-        };
-        return res.status(201).send(response);
+        return res.status(201).send(result);
       }
     );
   });
@@ -84,21 +76,7 @@ router.patch("/", login, (req, res, next) => {
         if (error) {
           return res.status(500).send({ error: error });
         }
-
-        const response = {
-          message: "qrcode successfully updates",
-          qrcodeUpdate: {
-            id_qrcode: req.body.id_qrcode,
-            title_qrcode: req.body.title_qrcode,
-            content_qrcode: req.body.content_qrcode,
-            request: {
-              type: "GET",
-              description: "updates qrcode",
-              url: "https://localhost:3000/dashboard/" + req.body.id_qrcode,
-            },
-          },
-        };
-        return res.status(202).send(response);
+        return res.status(202).send(result);
       }
     );
   });
@@ -117,21 +95,7 @@ router.delete("/", login, (req, res, next) => {
         if (error) {
           return res.status(500).send({ error: error });
         }
-
-        const response = {
-          message: "qrcode successfully delete",
-          request: {
-            type: "POST",
-            description: "insert qrcode",
-            url: "https://localhost:3000/dashboard/",
-            body: {
-              title_qrcode: "String",
-              content_qrcode: "String",
-            },
-          },
-        };
-
-        return res.status(202).send(response);
+        return res.status(202).send(result);
       }
     );
   });
